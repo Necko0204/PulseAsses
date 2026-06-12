@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
   const signalCutoff = new Date(now - SIGNAL_TTL_MS);
 
   // 1) Heartbeat — refresh lastSeen for the caller only.
-  await prisma.presence.update({
-    where: { id },
+  await prisma.presence.updateMany({
+    where: { id: id },
     data: { lastSeen: new Date(now) },
   }).catch(() => {});
 
