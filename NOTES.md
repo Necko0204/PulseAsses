@@ -19,7 +19,7 @@
 3. Fixed type casting in lines 53, 57, and 63 of the poll route
 4. Verified DATABASE_URL was correctly configured with actual Neon password (not `[REDACTED]`)
 
-**Status:** ✅ Fixed.
+**Status:** Fixed.
 
 ---
 
@@ -27,7 +27,7 @@
 
 **Issue:** Even when two users set different mock geolocation coordinates in DevTools Sensors that are relatively close to each other (e.g., nearby cities), they cannot see each other's dots on the map. Only when locations are far apart do the dots appear visible to each other.
 
-**Status:** 🔍 Known limitation — likely viewport/zoom culling issue with Mapbox.
+**Status:** Known limitation — likely viewport/zoom culling issue with Mapbox.
 
 ---
 
@@ -39,7 +39,7 @@
 - **Sender**: Sends messages with type field `t: "msg"`
 - **Receiver**: Checks for type field `msg.t === "chat"` (looking for `"chat"`, not `"msg"`)
 
-**Status:** ✅ Fixed by matching message types.
+**Status:** Fixed by matching message types.
 
 ---
 
@@ -52,7 +52,7 @@
    - Added starfield background with 100 twinkling stars using deterministic pseudo-random positioning
    - Implemented falling rain/particle effect with blue gradient lines cascading down the screen
    - Removed logo circle and reduced emoji usage for cleaner aesthetic
-   - Large gradient "Pulse" title with cyan→blue→purple color progression
+   - Large gradient "Pulse" title with cyan-blue-purple color progression
    - Three feature pills (Anonymous, Instant, Video) with hover effects
    - CTA button with gradient background and shine effect on hover
    - Smooth fade-in and fade-in-up animations on load
@@ -62,7 +62,7 @@
    - Added animation keyframes (twinkle, fall, fadeIn, fadeInUp)
    - Improved pulse-dot and pulse-me styling with better transitions
 
-**Status:** ✅ Completed.
+**Status:** Completed.
 
 ---
 
@@ -98,7 +98,7 @@
    - Rate limited: 120 signals per 60 seconds per user
    - Payload validation: only accepts valid WebRTC SDP/ICE JSON
    - Prevents self-connections: fromId must not equal toId
-   - Connection state validation: enforces proper state machine (request→accept/decline→active/end)
+   - Connection state validation: enforces proper state machine (request-accept/decline-active/end)
    - Mailbox flood protection: max 100 pending signals per recipient
    - Mutual connection tracking: stores peerId and pendingPeerId to prevent multiple simultaneous connections
 
@@ -121,23 +121,22 @@
    - Indexed peerId and pendingPeerId for fast lookups
 
 **Security Benefits:**
-- ✅ Session hijacking prevented: attacker cannot reuse sessionId without the secret
-- ✅ Brute force resistance: rate limiting + input validation
-- ✅ Timing attack resistance: timingSafeEqual for secret comparison
-- ✅ Connection state machine: prevents conflicting signals (e.g., multiple simultaneous connections)
-- ✅ DoS protection: mailbox size limits, rate limiting per IP and per user
-- ✅ Injection prevention: strict input validation and payload schema checking
-- ✅ Information disclosure: no plaintext secrets, no overly verbose error messages
+- Session hijacking prevented: attacker cannot reuse sessionId without the secret
+- Brute force resistance: rate limiting + input validation
+- Timing attack resistance: timingSafeEqual for secret comparison
+- Connection state machine: prevents conflicting signals (e.g., multiple simultaneous connections)
+- DoS protection: mailbox size limits, rate limiting per IP and per user
+- Injection prevention: strict input validation and payload schema checking
+- Information disclosure: no plaintext secrets, no overly verbose error messages
 
 **What could be added for production:**
-- HTTPS/TLS enforcement (already handled by Vercel)
-- CSRF tokens (unnecessary for stateless APIs with bearer secrets)
-- Secrets rotation / expiration (could add sessionExpiry to Presence)
-- IP reputation / blacklist (external service)
-- WebRTC DTLS-SRTP validation (handled by browser APIs)
-- Database encryption at rest (Neon feature)
+- IP-based blacklisting (external service)
+- User reputation system
+- Audit logging
+- JWT expiration tokens
+- CDN-level rate limiting
 
-**Status:** ✅ Completed. API is now hardened against common attack vectors.
+**Status:** Completed. API is now hardened against common attack vectors.
 
 ---
 
@@ -146,7 +145,7 @@
 ### Enhanced Security & Authentication System
 
 **What was built:**
-This phase focused on transforming Pulse from an **unauthenticated, vulnerable platform** to a **secure, resilient backend** suitable for production use.
+This phase focused on transforming Pulse from an unauthenticated, vulnerable platform to a secure, resilient backend suitable for production use.
 
 **Security Improvements:**
 
@@ -157,7 +156,7 @@ This phase focused on transforming Pulse from an **unauthenticated, vulnerable p
    - Timing-safe comparison prevents timing attacks
 
 2. **Connection State Machine**
-   - Strict state transitions: request → accept/decline → active → end
+   - Strict state transitions: request - accept/decline - active - end
    - Prevents race conditions: `pendingPeerId` tracks incoming requests, `peerId` tracks active connections
    - One connection at a time: enforced at DB level with `busy` flag + peer tracking
    - Automatic cleanup: leaving a session clears all connected peer state
@@ -184,9 +183,9 @@ This phase focused on transforming Pulse from an **unauthenticated, vulnerable p
    - Indexed all frequently-queried fields for performance
 
 **How it was made better:**
-- **From:** Unauthenticated, vulnerable to session hijacking and spam
-- **To:** Authenticated, rate-limited, state-validated, production-ready
-- **Impact:** API is now suitable for deployment with stranger connections, preventing:
+- From: Unauthenticated, vulnerable to session hijacking and spam
+- To: Authenticated, rate-limited, state-validated, production-ready
+- Impact: API is now suitable for deployment with stranger connections, preventing:
   - Session hijacking (requires secret)
   - Spam/DoS (rate limits + mailbox size limits)
   - Invalid states (state machine validation)
@@ -199,7 +198,7 @@ This phase focused on transforming Pulse from an **unauthenticated, vulnerable p
 - Deploy rate limiting at CDN level (Vercel Edge)
 - Add user reputation tracking (connections completed vs. abandoned)
 
-**Status:** ✅ Completed. Pulse API is now secure, resilient, and production-ready.
+**Status:** Completed. Pulse API is now secure, resilient, and production-ready.
 
 ---
 
@@ -207,8 +206,7 @@ This phase focused on transforming Pulse from an **unauthenticated, vulnerable p
 
 | Phase | Status | Achievement |
 |-------|--------|-------------|
-| Phase 1 | ✅ | Fixed all critical bugs: type casting, message routing, database connection |
-| Phase 2 | ✅ | Designed beautiful entry gate with starfield, rain effect, smooth animations |
-| Phase 3 | ✅ | Implemented comprehensive security: authentication, rate limiting, state machine, validation |
-| Phase 4 | ✅ | Hardened API for production with bearer secrets, connection tracking, and resilience |
-
+| Phase 1 | Fixed | Fixed all critical bugs: type casting, message routing, database connection |
+| Phase 2 | Fixed | Designed beautiful entry gate with starfield, rain effect, smooth animations |
+| Phase 3 | Fixed | Implemented comprehensive security: authentication, rate limiting, state machine, validation |
+| Phase 4 | Fixed | Hardened API for production with bearer secrets, connection tracking, and resilience |
