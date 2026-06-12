@@ -22,10 +22,10 @@ export async function GET(request: NextRequest) {
   const signalCutoff = new Date(now - SIGNAL_TTL_MS);
 
   // 1) Heartbeat — refresh lastSeen for the caller only.
-  await prisma.presence.updateMany({
+  await prisma.presence.update({
     where: { id },
     data: { lastSeen: new Date(now) },
-  });
+  }).catch(() => {});
 
   // 2) Reap stale presence rows and orphaned signals (independent deletes —
   // no atomicity needed, and avoids transactions over a PgBouncer pooler).
