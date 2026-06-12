@@ -28,6 +28,17 @@ interface PeerCallbacks {
 const ICE_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
+const MAX_CHAT_TEXT_CHARS = 2_000;
+const MAX_ATTACHMENT_DATA_URL_CHARS = 700_000;
+const ALLOWED_ATTACHMENT_MIME = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+  "text/plain",
+  "text/markdown",
+]);
 
 export class PeerSession {
   private pc: RTCPeerConnection;
@@ -87,7 +98,11 @@ export class PeerSession {
     dc.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data as string);
-        if (msg.t === "msg" && typeof msg.text === "string") {
+        if (
+          msg.t === "msg" &&
+          typeof msg.text === "string" &&
+          msg.text.length <= MAX_CHAT_TEXT_CHARS
+        ) {
           this.cb.onChat({ text: msg.text });
         } else if (msg.t === "attachment" && isAttachment(msg.attachment)) {
           this.cb.onChat({ attachment: msg.attachment });
@@ -142,10 +157,12 @@ export class PeerSession {
   }
 
   sendChat(text: string) {
+    if (!text || text.length > MAX_CHAT_TEXT_CHARS) return;
     this.safeSend({ t: "msg", text });
   }
 
   sendAttachment(attachment: ChatAttachment) {
+    if (!isAttachment(attachment)) return;
     this.safeSend({ t: "attachment", attachment });
   }
 
@@ -206,8 +223,12 @@ function isAttachment(value: unknown): value is ChatAttachment {
   const attachment = value as Record<string, unknown>;
   return (
     typeof attachment.name === "string" &&
+    attachment.name.length > 0 &&
+    attachment.name.length <= 120 &&
     typeof attachment.mime === "string" &&
+    ALLOWED_ATTACHMENT_MIME.has(attachment.mime) &&
     typeof attachment.dataUrl === "string" &&
-    attachment.dataUrl.startsWith("data:")
+    attachment.dataUrl.length <= MAX_ATTACHMENT_DATA_URL_CHARS &&
+    attachment.dataUrl.startsWith(`data:${attachment.mime};base64,`)
   );
 }

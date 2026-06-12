@@ -12,13 +12,18 @@ datasource db {
 }
 
 model Presence {
-  id       String   @id // client-generated session uuid
-  lat      Float // ALREADY privacy-offset coords (raw is never stored)
-  lng      Float
-  busy     Boolean  @default(false) // true while in an active connection
-  lastSeen DateTime
+  id            String   @id // client-generated public session uuid
+  secretHash    String // private per-session bearer secret hash
+  lat           Float // ALREADY privacy-offset coords (raw is never stored)
+  lng           Float
+  busy          Boolean  @default(false) // true while in an active connection
+  peerId        String? // active peer, used to authorize signaling
+  pendingPeerId String? // pending request peer, used to authorize accept/decline
+  lastSeen      DateTime
 
   @@index([lastSeen])
+  @@index([peerId])
+  @@index([pendingPeerId])
 }
 
 model Signal {
@@ -31,4 +36,11 @@ model Signal {
   createdAt DateTime @default(now())
 
   @@index([toId])
+  @@index([fromId])
+}
+
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
 }
