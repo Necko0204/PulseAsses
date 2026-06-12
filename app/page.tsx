@@ -7,7 +7,12 @@ import ConnectionPrompt from "./components/ConnectionPrompt";
 import ChatPanel, { type ChatMessage } from "./components/ChatPanel";
 import VideoPanel from "./components/VideoPanel";
 import { join, leave, poll, sendSignal } from "@/lib/api";
-import { PeerSession, type DescType, type PeerControl } from "@/lib/webrtc";
+import {
+  PeerSession,
+  type ChatAttachment,
+  type DescType,
+  type PeerControl,
+} from "@/lib/webrtc";
 import { POLL_INTERVAL_MS } from "@/lib/presence";
 import { type PeerDot, type SignalMsg } from "@/lib/types";
 
@@ -21,6 +26,7 @@ type Conn =
 type VideoState = "none" | "requesting" | "incoming" | "active";
 
 const REQUEST_TIMEOUT_MS = 30_000;
+const CONNECT_TIMEOUT_MS = 30_000;
 
 export default function Home() {
   const [phase, setPhase] = useState<"gate" | "live">("gate");
@@ -51,18 +57,29 @@ export default function Home() {
   const peerRef = useRef<PeerSession | null>(null);
   const msgId = useRef(0);
   const requestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function showNotice(text: string) {
     setNotice(text);
     window.setTimeout(() => setNotice(null), 3500);
   }
 
-  function addMessage(mine: boolean, text: string) {
-    setMessages((prev) => [...prev, { id: msgId.current++, mine, text }]);
+  function addMessage(
+    mine: boolean,
+    message: { text?: string; attachment?: ChatAttachment },
+  ) {
+    setMessages((prev) => [...prev, { id: msgId.current++, mine, ...message }]);
   }
 
   function teardown(message?: string) {
-    if (requestTimer.current) clearTimeout(requestTimer.current);
+    if (requestTimer.current) {
+      clearTimeout(requestTimer.current);
+      requestTimer.current = null;
+    }
+    if (connectTimer.current) {
+      clearTimeout(connectTimer.current);
+      connectTimer.current = null;
+    }
     peerRef.current?.close();
     peerRef.current = null;
     setLocalStream(null);
@@ -74,23 +91,43 @@ export default function Home() {
   }
 
   function startPeer(peerId: string, initiator: boolean) {
+    if (connectTimer.current) {
+      clearTimeout(connectTimer.current);
+      connectTimer.current = null;
+    }
     const ps = new PeerSession(initiator, {
       onSignal: (type: DescType, payload: string) => {
         void sendSignal(sessionId, peerId, type, payload);
       },
-      onChat: (text) => addMessage(false, text),
+      onChat: (message) => addMessage(false, message),
       onControl: (ctrl) => handleControl(ctrl),
       onRemoteStream: (stream) => setRemoteStream(stream),
       onConnectionState: (state) => {
-        if (state === "failed") {
+        if (state === "connected") {
+          if (connectTimer.current) {
+            clearTimeout(connectTimer.current);
+            connectTimer.current = null;
+          }
+        } else if (state === "failed") {
           teardown("Connection failed (network).");
         }
       },
       onChannelOpen: () => {
+        if (connectTimer.current) {
+          clearTimeout(connectTimer.current);
+          connectTimer.current = null;
+        }
         setConn({ kind: "connected", peerId });
       },
     });
     peerRef.current = ps;
+    connectTimer.current = setTimeout(() => {
+      const c = connRef.current;
+      if (c.kind === "connecting" && c.peerId === peerId) {
+        void sendSignal(sessionId, peerId, "end");
+        teardown("Connection timed out.");
+      }
+    }, CONNECT_TIMEOUT_MS);
   }
 
   function handleControl(ctrl: PeerControl) {
@@ -359,7 +396,11 @@ export default function Home() {
           videoBusy={video !== "none"}
           onSend={(text) => {
             peerRef.current?.sendChat(text);
-            addMessage(true, text);
+            addMessage(true, { text });
+          }}
+          onSendAttachment={(attachment) => {
+            peerRef.current?.sendAttachment(attachment);
+            addMessage(true, { attachment });
           }}
           onStartVideo={startVideoRequest}
           onEnd={endConnection}

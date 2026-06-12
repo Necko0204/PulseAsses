@@ -5,9 +5,20 @@ export type PeerControl =
   | "video-decline"
   | "video-end";
 
+export interface ChatAttachment {
+  name: string;
+  mime: string;
+  dataUrl: string;
+}
+
+export interface ChatPayload {
+  text?: string;
+  attachment?: ChatAttachment;
+}
+
 interface PeerCallbacks {
   onSignal: (type: DescType, payload: string) => void;
-  onChat: (text: string) => void;
+  onChat: (message: ChatPayload) => void;
   onControl: (ctrl: PeerControl) => void;
   onRemoteStream: (stream: MediaStream | null) => void;
   onConnectionState: (state: RTCPeerConnectionState) => void;
@@ -77,7 +88,9 @@ export class PeerSession {
       try {
         const msg = JSON.parse(e.data as string);
         if (msg.t === "msg" && typeof msg.text === "string") {
-          this.cb.onChat(msg.text);
+          this.cb.onChat({ text: msg.text });
+        } else if (msg.t === "attachment" && isAttachment(msg.attachment)) {
+          this.cb.onChat({ attachment: msg.attachment });
         } else if (msg.t === "ctrl" && typeof msg.ctrl === "string") {
           this.cb.onControl(msg.ctrl as PeerControl);
         }
@@ -107,8 +120,8 @@ export class PeerSession {
     this.ignoreOffer = !this.polite && offerCollision;
     if (this.ignoreOffer) return;
 
-    await this.flushPendingCandidates();
     await this.pc.setRemoteDescription(desc);
+    await this.flushPendingCandidates();
     if (desc.type === "offer") {
       await this.pc.setLocalDescription();
       if (this.pc.localDescription) {
@@ -130,6 +143,10 @@ export class PeerSession {
 
   sendChat(text: string) {
     this.safeSend({ t: "msg", text });
+  }
+
+  sendAttachment(attachment: ChatAttachment) {
+    this.safeSend({ t: "attachment", attachment });
   }
 
   sendControl(ctrl: PeerControl) {
@@ -182,4 +199,15 @@ export class PeerSession {
       this.pc.close();
     } catch {}
   }
+}
+
+function isAttachment(value: unknown): value is ChatAttachment {
+  if (!value || typeof value !== "object") return false;
+  const attachment = value as Record<string, unknown>;
+  return (
+    typeof attachment.name === "string" &&
+    typeof attachment.mime === "string" &&
+    typeof attachment.dataUrl === "string" &&
+    attachment.dataUrl.startsWith("data:")
+  );
 }

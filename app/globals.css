@@ -36,6 +36,8 @@ body {
   box-shadow: 0 0 0 rgba(255, 255, 255, 0.5);
   animation: pulse-ring 2s ease-out infinite;
   transition: transform 0.1s ease;
+  display: block;
+  margin: 0;
 }
 
 .pulse-dot:hover {
@@ -44,11 +46,15 @@ body {
 
 /* The user's own "you are here" pin — small, sized like the dots. */
 .pulse-me {
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 18px;
   line-height: 1;
   cursor: default;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  margin: 0;
+  padding: 0;
 }
 
 .pulse-me-label {
@@ -76,4 +82,65 @@ body {
   100% {
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
+}
+
+/* Entry gate animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out;
 }

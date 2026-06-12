@@ -48,13 +48,52 @@ The message type is sent as `"msg"` but the receiver is checking for `"chat"`, s
 
 **Location:** `lib/webrtc.ts` line 81 — change `if (msg.t === "chat"` to `if (msg.t === "msg"`
 
-**Status:** 🔍 Needs fixing.
+**Status:** ✅ Fixed. Messages now work correctly.
 
 ---
 
 ## Phase 2 — Make it good
 
-(To be completed)
+### Design Improvements Completed
+
+**What was changed:**
+1. **Entry Gate Page (`app/components/EntryGate.tsx`):**
+   - Added starfield background with 100 twinkling stars using deterministic pseudo-random positioning
+   - Implemented falling rain/particle effect with blue gradient lines cascading down the screen
+   - Removed logo circle and reduced emoji usage for cleaner aesthetic
+   - Large gradient "Pulse" title with cyan→blue→purple color progression
+   - Three feature pills (Anonymous, Instant, Video) with hover effects
+   - CTA button with gradient background and shine effect on hover
+   - Smooth fade-in and fade-in-up animations on load
+   - Fixed hydration mismatch by using seeded pseudo-random functions instead of Math.random()
+
+2. **Global Styles (`app/globals.css`):**
+   - Added animation keyframes (twinkle, fall, fadeIn, fadeInUp, slideInLeft, slideInRight)
+   - Improved pulse-dot styling with better transitions
+   - Enhanced pulse-me marker styling with proper flexbox centering
+
+3. **Map Markers:**
+   - Fixed marker anchor positioning (changed from "bottom" to "center" for proper placement)
+   - Improved CSS for pulse-me and pulse-dot elements to render correctly in Mapbox
+
+4. **Chat Box Design + Attachments (`app/components/ChatPanel.tsx`, `app/page.tsx`, `lib/webrtc.ts`):**
+   - Redesigned the chat panel with a cleaner dark UI, stranger avatar, live connection status dot, improved message bubbles, and a more polished input area
+   - Added a file/photo attachment button to the chat input
+   - Added selected-file preview with remove option before sending
+   - Added image preview bubbles for photo attachments
+   - Added downloadable file bubbles for supported non-image attachments
+   - Sent attachments through the existing WebRTC data channel, keeping them peer-to-peer instead of uploading or storing them on the server
+   - Added a 512 KB attachment size limit to avoid unreliable large data-channel payloads
+
+**Thinking behind the changes:**
+- **Starfield + rain effect:** Creates an immersive, futuristic atmosphere that matches the "global network" concept of Pulse
+- **Gradient colors (cyan/blue/purple):** Modern, tech-forward palette that feels premium and inviting
+- **Reduced emojis:** Cleaner, more professional look while maintaining personality with strategic emoji use
+- **Animations:** Smooth transitions add polish and guide user attention
+- **Deterministic randomization:** Solved server/client hydration issues while maintaining visual variety
+- **Peer-to-peer attachments:** Keeps the anonymous/no-history promise because photos and files are sent directly between connected users and are not saved by the app
+
+**Status:** ✅ Completed. Entry gate now has a beautiful, immersive design, and the chat box now supports a polished chat experience with peer-to-peer photo/file attachments.
 
 ---
 

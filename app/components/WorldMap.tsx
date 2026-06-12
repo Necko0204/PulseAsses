@@ -32,8 +32,6 @@ export default function WorldMap({
   const meMarkerRef = useRef<Marker | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Marker click handlers are bound once, so read the live click handler +
-  // connectability through refs (synced in an effect, never during render).
   const onPeerClickRef = useRef(onPeerClick);
   const canConnectRef = useRef(canConnect);
   useEffect(() => {
@@ -41,7 +39,6 @@ export default function WorldMap({
     canConnectRef.current = canConnect;
   });
 
-  // Initialise the map once.
   useEffect(() => {
     if (!TOKEN || !containerRef.current) return;
     let cancelled = false;
@@ -54,7 +51,6 @@ export default function WorldMap({
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: "mapbox://styles/mapbox/dark-v11",
-        // Open centered on the user if we know where they are, else world view.
         center: me ? [me.lng, me.lat] : [0, 20],
         zoom: me ? 4 : 1.4,
         attributionControl: true,
@@ -75,11 +71,8 @@ export default function WorldMap({
       mapRef.current = null;
       setReady(false);
     };
-    // `me` is only read for the initial center; we don't want to re-init on change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Show / move the user's own "you are here" pin.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready || !me) return;
@@ -93,8 +86,7 @@ export default function WorldMap({
         el.className = "pulse-me";
         el.title = "You are here";
         el.innerHTML = `<span class="pulse-me-label">Me</span>📍`;
-        // anchor "bottom" → the pin's tip sits on the exact coordinate.
-        meMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+        meMarkerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
           .setLngLat([me.lng, me.lat])
           .addTo(map);
       } else {
@@ -107,7 +99,6 @@ export default function WorldMap({
     };
   }, [me, ready]);
 
-  // Reconcile markers whenever the peer list changes (or the map becomes ready).
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
@@ -139,7 +130,6 @@ export default function WorldMap({
         marker.getElement().style.opacity = peer.busy ? "0.35" : "1";
       }
 
-      // Drop markers for peers that went offline / got filtered out.
       for (const [id, marker] of markers) {
         if (!seen.has(id)) {
           marker.remove();
